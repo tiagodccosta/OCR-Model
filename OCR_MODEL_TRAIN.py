@@ -1,11 +1,14 @@
-# Import necessary libraries
 from emnist import extract_training_samples, extract_test_samples
 import tensorflow as tf
+from tensorflow.keras.models import Sequential # type: ignore
+from tensorflow.keras.layers import Dense, Flatten # type: ignore
 from tensorflow.keras.utils import to_categorical # type: ignore
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+from keras_tuner import HyperParameters # type: ignore
+
 
 # Load and preprocess the EMNIST dataset
 # Load the "ByClass" split (includes digits and letters)
@@ -15,7 +18,7 @@ test_images, test_labels = extract_test_samples('byclass')
 # Normalize pixel values (0-1 range)
 train_images = train_images / 255.0
 test_images = test_images / 255.0
-
+    
 # One-hot encode labels
 num_classes = 62  # 10 digits + 26 uppercase letters + 26 lowercase letters
 train_labels = to_categorical(train_labels, num_classes)
@@ -25,27 +28,37 @@ test_labels = to_categorical(test_labels, num_classes)
 train_images = train_images.reshape(-1, 28, 28, 1)
 test_images = test_images.reshape(-1, 28, 28, 1)
 
-# Define the CNN model
-model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
-    tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-    tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Flatten(),
+# Define the MLP model
+model = Sequential([
+    tf.keras.layers.Flatten(input_shape=(28, 28, 1)),
     tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(32, activation='relu'),
     tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
 
-model.compile(optimizer='adam',
+hp = HyperParameters()
+
+optimizer_choice = hp.Choice("optimizer", values=["sgd", "adam"])
+learning_rate_choice = hp.Choice("learning_rate", values=[0.001, 0.01])
+
+# Configure the optimizer
+if optimizer_choice == "sgd":
+    optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate_choice)
+elif optimizer_choice == "adam":
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_choice)
+
+# Compile the model
+model.compile(optimizer=optimizer,
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 # Train the model
-history = model.fit(train_images, train_labels, 
-                    epochs=10, 
-                    batch_size=128, 
+history = model.fit(train_images, train_labels,
+                    epochs=10,
+                    batch_size=128,
                     validation_data=(test_images, test_labels))
+
 
 # Evaluate the model
 test_loss, test_acc = model.evaluate(test_images, test_labels)
