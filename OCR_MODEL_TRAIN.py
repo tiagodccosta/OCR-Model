@@ -30,7 +30,8 @@ test_images = test_images.reshape(-1, 28, 28, 1)
 
 # Define the MLP model
 model = Sequential([
-    tf.keras.layers.Flatten(input_shape=(28, 28, 1)),
+    tf.keras.layers.Input(shape=(28, 28, 1)),
+    tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(128, activation='relu'),
     tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dense(32, activation='relu'),
@@ -55,7 +56,7 @@ model.compile(optimizer=optimizer,
 
 # Train the model
 history = model.fit(train_images, train_labels,
-                    epochs=10,
+                    epochs=50,
                     batch_size=128,
                     validation_data=(test_images, test_labels))
 
