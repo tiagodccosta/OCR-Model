@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.models import load_model # type: ignore
-from tensorflow.keras.utils import to_categorical # type: ignore
+from tensorflow.keras.models import load_model  # type: ignore
+from tensorflow.keras.utils import to_categorical  # type: ignore
 from emnist import extract_test_samples
 
 # Load the pre-trained model
-model_path = "ocr_model.keras" 
+model_path = "ocr_model.keras"
 model = load_model(model_path)
 
 # Load the EMNIST dataset
@@ -31,21 +31,31 @@ index_to_label = {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7'
 index_to_label.update({i + 10: chr(65 + i) for i in range(26)})
 index_to_label.update({i + 36: chr(97 + i) for i in range(26)})
 
-# Map predicted indices and true indices to letters
-predicted_labels = [index_to_label[i] for i in predicted_classes]
-true_labels = [index_to_label[i] for i in true_classes]
-
-# Plot a few test samples with predictions
+# Number of samples to display
 num_samples = 50
+
+# Randomly select indices for the test images
+random_indices = np.random.choice(len(test_images), size=num_samples, replace=False)
+
+# Subset the data
+sampled_images = test_images[random_indices]
+sampled_true_classes = true_classes[random_indices]
+sampled_pred_classes = predicted_classes[random_indices]
+
+# Map predicted indices and true indices to letters
+sampled_true_labels = [index_to_label[i] for i in sampled_true_classes]
+sampled_pred_labels = [index_to_label[i] for i in sampled_pred_classes]
+
+# Plot the selected samples with predictions
 cols = 5
 rows = num_samples // cols + (num_samples % cols > 0)
-plt.figure(figsize=(15, 3 * rows)) 
+plt.figure(figsize=(15, 3 * rows))
 
 for i in range(num_samples):
     plt.subplot(rows, cols, i + 1)
-    plt.imshow(test_images[i].squeeze(), cmap='gray')
-    true_label = true_labels[i]
-    pred_label = predicted_labels[i]
+    plt.imshow(sampled_images[i].squeeze(), cmap='gray')
+    true_label = sampled_true_labels[i]
+    pred_label = sampled_pred_labels[i]
     color = 'green' if true_label == pred_label else 'red'
     plt.title(f"True: {true_label}\nPred: {pred_label}", color=color)
     plt.axis('off')
