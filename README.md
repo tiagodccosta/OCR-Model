@@ -1,4 +1,4 @@
-# OCR-Model MLP trained on EMNIST Dataset
+# Multi Layer Perceptron OCR-Model trained on EMNIST Dataset
 
 
 ![Training / Validation Accuracy](./Images/Figure_1.png)
